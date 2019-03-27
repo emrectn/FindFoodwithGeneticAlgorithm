@@ -4,9 +4,11 @@ from enum import Enum
 import copy
 
 N = 10
+GENE_SIZE = N*N*2
 FOOD_COUNT = 30
-CHROMOSOME_COUNT = 11
-Q = 0
+MUTATION_RATE = 0.1
+CHROMOSOME_COUNT = 10
+GENERATION_SIZE = 20
 
 
 class Direction(Enum):
@@ -134,17 +136,28 @@ def crossover(chromosomes):
         crossover_ch[(2*i)]['chromosome'] = ch1
         crossover_ch[(2*i+1)]['chromosome'] = ch2
 
-    return chromosomes, crossover_ch
+    return crossover_ch
 
 
-def mutation(chromosome_list):
-    pass
+def mutation(chromosomes, mutation=MUTATION_RATE):
+
+    length = len(chromosomes[0]['chromosome'])
+    cnt = 0
+    for i in chromosomes:
+        mutation_indexs = np.random.choice(length, int(length*MUTATION_RATE), replace=False)
+        for index in mutation_indexs:
+            if i['chromosome'][index] != 4:
+                i['chromosome'][index] += 1 % 5
+            else:
+                i['chromosome'][index] = 1
+        cnt += 1
+    return chromosomes
 
 
 if '__main__' == __name__:
     table = create_table_and_direction()
     # print(table)
-    chromosomes = [create_chromosome() for x in range(CHROMOSOME_COUNT)]
+    chromosomes = [create_chromosome(0, GENE_SIZE) for x in range(CHROMOSOME_COUNT)]
     chromosome_list = create_chromosome_details(chromosomes)
     # print(chromosome_list)
 
@@ -162,7 +175,7 @@ if '__main__' == __name__:
 
     # Find most successful chromosome
     most_success_ch = max(chromosome_list, key=lambda d: d['eaten'])
-    # print("max : ", most_success_ch)
+    print("max : ", most_success_ch)
 
     if most_success_ch == FOOD_COUNT:
         print("All the food are over.")
@@ -174,5 +187,8 @@ if '__main__' == __name__:
     chromosome_list = create_selection_chromosome_list(chromosome_list, selections)
 
     # crosover
-    chromosome_list, ch = crossover(chromosome_list)
+    chromosome_list = crossover(chromosome_list)
+
+    # mutation
+    chromosome_list = mutation(chromosome_list)
 
