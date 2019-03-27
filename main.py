@@ -71,7 +71,7 @@ def eat_food(table, chromosome, n=N, food_count=FOOD_COUNT):
 
         if table[x, y] == -1:
             status = "Overflow"
-            return status, eaten_food_count
+            return status, eaten_food_count, cnt
 
         elif table[x, y] == 3:
             table[x, y] = 9
@@ -83,13 +83,31 @@ def eat_food(table, chromosome, n=N, food_count=FOOD_COUNT):
 
         if eaten_food_count == food_count:
             status = "Done"
-            return status, eaten_food_count
+            return status, eaten_food_count, cnt
 
         # print("i: {} x : {}, y:{}".format(i,x,y))
         cnt += 1
     status = "NotFound"
-    return status, eaten_food_count
+    return status, eaten_food_count, cnt
 
+
+def selection_chromosome(chromosome_list):
+    rates = [i['rate'] for i in chromosome_list]
+    sum_of_rates = sum(rates)
+    rates = list(map(lambda x: x/sum_of_rates, rates))
+    chosen_index_list = np.random.choice(len(chromosome_list), 10, p=rates)
+    return chosen_index_list
+
+
+def create_selection_chromosome_list(chromosome_list, selections):
+    new_chromosomes = chromosome_list[:]
+
+    for i, value in enumerate(selections):
+        new_chromosomes[i] = chromosome_list[value]
+        new_chromosomes[i]['status'] = 'Select'
+        new_chromosomes[i].update(dict.fromkeys(['eaten', 'rate'], 0))
+        # new_chromosomes[i].update(dict.fromkeys(['cnt', 'eaten', 'rate'], 0))
+    return new_chromosomes
 
 if '__main__' == __name__:
     table = create_table_and_direction()
@@ -98,12 +116,27 @@ if '__main__' == __name__:
     chromosome_list = create_chromosome_details(chromosomes)
     # print(chromosome_list)
 
+    # Her bir kromozomun yediği yemeklerin başarı oranları.
     for i in range(len(chromosome_list)):
         chromosome = chromosome_list[i]['chromosome']
-        status, eaten_food_count = eat_food(table, chromosome)
+        status, eaten_food_count, cnt = eat_food(table, chromosome)
+        chromosome_list[i]['cnt'] = cnt
         chromosome_list[i]['status'] = status
         chromosome_list[i]['eaten'] = eaten_food_count
         chromosome_list[i]['rate'] = eaten_food_count / FOOD_COUNT
 
-    for i in chromosome_list:
-        print(i['status'], " ", i['eaten'], " ", i['rate'])
+    # for i in chromosome_list:
+    #     print(i['status'], " ", i['eaten'], " ", i['rate'])
+
+    # Find most successful chromosome
+    most_success_ch = max(chromosome_list, key=lambda d: d['eaten'])
+    # print("max : ", most_success_ch)
+
+    if most_success_ch == FOOD_COUNT:
+        print("All the food are over.")
+
+    selections = selection_chromosome(chromosome_list)
+    print(selections)
+
+    chromosome_list = create_selection_chromosome_list(chromosome_list, selections)
+    print(chromosome_list)
