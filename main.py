@@ -1,10 +1,12 @@
 import numpy as np
 import random as rdm
 from enum import Enum
+import copy
 
 N = 10
 FOOD_COUNT = 30
-CHROMOSOME_COUNT = 10
+CHROMOSOME_COUNT = 11
+Q = 0
 
 
 class Direction(Enum):
@@ -100,7 +102,7 @@ def selection_chromosome(chromosome_list):
 
 
 def create_selection_chromosome_list(chromosome_list, selections):
-    new_chromosomes = chromosome_list[:]
+    new_chromosomes = copy.deepcopy(chromosome_list)
 
     for i, value in enumerate(selections):
         new_chromosomes[i] = chromosome_list[value]
@@ -109,9 +111,39 @@ def create_selection_chromosome_list(chromosome_list, selections):
         # new_chromosomes[i].update(dict.fromkeys(['cnt', 'eaten', 'rate'], 0))
     return new_chromosomes
 
+
+def crossover(chromosomes):
+
+    crossover_ch = list()
+    length = len(chromosomes[0]['chromosome'])
+
+    for i in range(len(chromosomes) // 2):
+        gene_change_list = np.random.choice([0, 1], length).tolist()
+
+        ch1 = list()
+        ch1 = list()
+        ch1 = chromosomes[(2*i)]['chromosome'].tolist()
+        ch2 = chromosomes[(2*i+1)]['chromosome'].tolist()
+
+        for index, change in enumerate(gene_change_list):
+            if change:
+                ch1[index], ch2[index] = ch2[index], ch1[index]
+
+        crossover_ch.append(dict())
+        crossover_ch.append(dict())
+        crossover_ch[(2*i)]['chromosome'] = ch1
+        crossover_ch[(2*i+1)]['chromosome'] = ch2
+
+    return chromosomes, crossover_ch
+
+
+def mutation(chromosome_list):
+    pass
+
+
 if '__main__' == __name__:
     table = create_table_and_direction()
-    print(table)
+    # print(table)
     chromosomes = [create_chromosome() for x in range(CHROMOSOME_COUNT)]
     chromosome_list = create_chromosome_details(chromosomes)
     # print(chromosome_list)
@@ -136,7 +168,11 @@ if '__main__' == __name__:
         print("All the food are over.")
 
     selections = selection_chromosome(chromosome_list)
-    print(selections)
+
+    # print(selections)
 
     chromosome_list = create_selection_chromosome_list(chromosome_list, selections)
-    print(chromosome_list)
+
+    # crosover
+    chromosome_list, ch = crossover(chromosome_list)
+
