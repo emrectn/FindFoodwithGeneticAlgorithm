@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 26 19:10:36 2019
+@author: Emre Çetin
+"""
+
 import numpy as np
 import random as rdm
 from enum import Enum
@@ -16,13 +22,13 @@ import matplotlib as mpl
     @GENERATION_SIZE : Generation size
 """
 
-N = 10
-GENE_SIZE = N*N*2
-FOOD_COUNT = 5
+N = 7
+GENE_SIZE = N*N*3
+FOOD_COUNT = 3
 MUTATION_RATE = 0.1
-CHROMOSOME_COUNT = 20
-CURSOR = [int((N+1)/2), int((N+1)/2)]
-GENERATION_SIZE = 500
+CHROMOSOME_COUNT = 50
+POINTER = [int((N+1)/2), int((N+1)/2)]
+GENERATION_SIZE = 1000
 
 
 # To recall directions
@@ -48,7 +54,7 @@ def create_chromosome(count=None):
 def create_chromosome_details(chromosome_list):
     """
     To review the details create a dict()
-    {'chromose': [1,4,3 ...], 'status': 'Done' or 'NotFound', 'eaten': 2}
+    details = {'chromose': [1,4,3 ...], 'status': 'Done' or 'NotFound', 'eaten': 2}
     """
     chromosome_details = list()
 
@@ -75,6 +81,7 @@ def create_table_and_direction(n=N, food_count=FOOD_COUNT):
 
     if food_count < (n*n/2):
         while cnt != food_count:
+            # random x and y coordinates to create the food in table
             x = rdm.randint(1, n)
             y = rdm.randint(1, n)
 
@@ -207,44 +214,45 @@ def mutation(chromosomes, mutation=MUTATION_RATE):
     return chromosomes
 
 
-def print_function(param, size, generation_number):
+# visualize table with element(food, cursor, space)
+def matris_visualize(param, size=N):
     mpl.style.use('default')
-    matfig = plt.figure(figsize=(8, 8))
-    plt.matshow(param, fignum=matfig.number)
+    plt.matshow(param)
     ax = plt.gca()
-    ax.set_xticks(np.arange(-.5, size, 1))
-    ax.set_yticks(np.arange(-.5, size, 1))
-    ax.set_color_cycle("black")
+    ax.set_xticks(np.arange(-.5, size+1, 1))
+    ax.set_yticks(np.arange(-.5, size+1, 1))
+    ax.set_facecolor("black")
     ax.grid(which='both', color="black")
-    plt.suptitle(generation_number, fontsize=40)
     plt.show(block=False)
-    plt.pause(0.3)
+    plt.pause(0.25)
     plt.close()
 
 
-def change_cursor_coordinate(matrix, move):
-    matrix[CURSOR[0]][CURSOR[1]] = 0
-    # sol
-    if (move == 1):
-        CURSOR[1] = CURSOR[1] + 1
-        matrix[CURSOR[0]][CURSOR[1]] = 5
-    # yukarı
-    elif (move == 2):
-        CURSOR[0] = CURSOR[0] + 1
-        matrix[CURSOR[0]][CURSOR[1]] = 5
-    # sağ
-    elif (move == 3):
-        CURSOR[1] = CURSOR[1] - 1
-        matrix[CURSOR[0]][CURSOR[1]] = 5
-    # aşağı
+# change cursor coardinate in table
+def follow_cursor(matrix, move):
+    matrix[POINTER[0]][POINTER[1]] = 0
+    # up
+    if move == 1:
+        POINTER[0] -= 1
+        matrix[POINTER[0]][POINTER[1]] = 5
+    # right
+    elif move == 2:
+        POINTER[1] += 1
+        matrix[POINTER[0]][POINTER[1]] = 5
+    # down
+    elif move == 3:
+        POINTER[0] += 1
+        matrix[POINTER[0]][POINTER[1]] = 5
+    # left
     else:
-        CURSOR[0] = CURSOR[0] - 1
-        matrix[CURSOR[0]][CURSOR[1]] = 5
+        POINTER[1] -= 1
+        matrix[POINTER[0]][POINTER[1]] = 5
 
 
 if '__main__' == __name__:
     table = create_table_and_direction()
     # print(table)
+    matris_visualize(table, N)
     chromosomes = [create_chromosome(GENE_SIZE) for x in range(CHROMOSOME_COUNT)]
     chromosome_list = create_chromosome_details(chromosomes)
     # print(chromosome_list)
@@ -260,12 +268,16 @@ if '__main__' == __name__:
 
         # Find most successful chromosome
         most_success_ch = max(chromosome_list, key=lambda d: d['eaten'])
-        print("Generation : ", g)
-        print("max : [status : {}, eaten : {}, cnt : {}".format(most_success_ch['status'], most_success_ch['eaten'], most_success_ch['cnt']))
 
         # If completed
         if most_success_ch['status'] == "Done":
             print("All the food are over.")
+            print("Generation : ", g)
+            print("max : [status : {}, eaten : {}, cnt : {}".format(most_success_ch['status'], most_success_ch['eaten'], most_success_ch['cnt']))
+            for i in most_success_ch['chromosome'][:most_success_ch['cnt']+1]:
+                follow_cursor(table, i)
+                matris_visualize(table)
+
             break
 
         selections = selection_chromosome(chromosome_list)
